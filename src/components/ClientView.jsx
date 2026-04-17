@@ -150,7 +150,9 @@ export default function ClientView() {
   };
 
   if (step === 'loading') {
-    return <div className="min-h-screen bg-[#1a110a] flex items-center justify-center text-[#d2b48c] font-black uppercase italic text-xl">Wake Up...</div>;
+    return <div className="min-h-screen bg-[#1a110a] flex items-center justify-center ">
+      <img src="/Logo.svg" alt="Logo" className="w-[150px] h-auto" />
+      </div>;
   }
 
   const bonuses = user ? Math.floor(user.progress / 7) : 0;

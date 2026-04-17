@@ -8,7 +8,14 @@ import ProtectedView from './components/ProtectedView.jsx';
 export default function App() {
 
   useEffect(() => {
+    
     // Міняємо версію (V1 -> V2), щоб змусити телефон оновитися після твоїх останніх змін
+    const loader = document.getElementById('preloader');
+    if (loader) {
+      loader.classList.add('fade-out');
+      setTimeout(() => loader.remove(), 500); // Повністю видаляємо через пів секунди
+    }
+    
     const currentVersion = 'forceRefreshV2'; 
     const hasRefreshed = sessionStorage.getItem(currentVersion);
     

@@ -1,5 +1,10 @@
 {
   "name": "Wake Up Coffee Loyalty",
+  "author": {
+  "name": "Tim Liu",
+  "email": "artem.liubavin@gmail.com",
+  "url": "https://wakeupcofeeloyalty.vercel.app"
+},
   "short_name": "Wake Up",
   "start_url": "/",
   "display": "standalone",
