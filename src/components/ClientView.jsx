@@ -13,6 +13,9 @@ export default function ClientView() {
   const [generatedCode, setGeneratedCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [installPrompt, setInstallPrompt] = useState(null);
+  
+  // Новий стейт для побажання
+  const [dailyWish, setDailyWish] = useState("Завантажуємо бадьорість...");
 
   // 1. Визначення типу пристрою
   useEffect(() => {
@@ -25,7 +28,38 @@ export default function ClientView() {
     if (android && !isStandalone) setIsAndroid(true);
   }, []);
 
-  // 2. Налаштування PWA для Android
+  // 2. Завантаження побажань (GitHub + LocalStorage)
+  useEffect(() => {
+    const RAW_URL = "https://raw.githubusercontent.com/ТВОЙ_ЛОГИН/ТВОЙ_РЕПО/main/wishes.json";
+
+    const pickWish = (list) => {
+      if (!list || list.length === 0) return;
+      const today = new Date();
+      // Хеш дати, щоб побажання було стабільним протягом 24 годин
+      const dateHash = today.getFullYear() + (today.getMonth() + 1) + today.getDate();
+      setDailyWish(list[dateHash % list.length]);
+    };
+
+    const loadWishes = async () => {
+      try {
+        const response = await fetch(RAW_URL);
+        const freshWishes = await response.json();
+        localStorage.setItem('cached_wishes', JSON.stringify(freshWishes));
+        pickWish(freshWishes);
+      } catch (error) {
+        const cached = localStorage.getItem('cached_wishes');
+        if (cached) {
+          pickWish(JSON.parse(cached));
+        } else {
+          setDailyWish("Wake up. Drink coffee. Be awesome! ☕️");
+        }
+      }
+    };
+
+    loadWishes();
+  }, []);
+
+  // 3. Налаштування PWA для Android
   useEffect(() => {
     const handler = (e) => {
       e.preventDefault();
@@ -35,7 +69,7 @@ export default function ClientView() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  // 3. Перевірка сесії (Офлайн)
+  // 4. Перевірка сесії
   useEffect(() => {
     const checkSession = async () => {
       const saved = localStorage.getItem('coffee_user');
@@ -128,27 +162,14 @@ export default function ClientView() {
       {step === 'card' && user ? (
         <div className="w-full max-w-sm flex flex-col items-center text-center my-auto animate-in fade-in zoom-in duration-500">
           
-          {/* Кнопка встановлення тільки для Android */}
           {isAndroid && installPrompt && (
-            <button 
-              onClick={handleInstall}
-              className="mb-6 bg-white text-black px-6 py-2 rounded-full font-bold text-[10px] uppercase animate-bounce shadow-lg"
-            >
-              Встановити на Android 📱
-            </button>
+            <button onClick={handleInstall} className="mb-6 bg-white text-black px-6 py-2 rounded-full font-bold text-[10px] uppercase animate-bounce shadow-lg">Встановити на Android 📱</button>
           )}
 
           <h1 className="text-2xl sm:text-3xl font-black mb-6 text-[#d2b48c] italic uppercase tracking-tighter">Wake Up Coffee</h1>
           
           <div className="bg-white p-4 rounded-3xl shadow-2xl mb-6 border-4 border-[#2a1d15] flex items-center justify-center overflow-hidden w-40 h-40 sm:w-48 sm:h-48">
-             <QRCodeSVG 
-                value={user.phone.trim()} 
-                size={180} 
-                level="H" 
-                style={{ height: "100%", width: "100%" }}
-                bgColor="#ffffff" 
-                fgColor="#000000" 
-             />
+             <QRCodeSVG value={user.phone.trim()} size={180} level="H" style={{ height: "100%", width: "100%" }} bgColor="#ffffff" fgColor="#000000" />
           </div>
 
           <p className="text-xl font-black uppercase mb-0.5">{user.name}</p>
@@ -161,20 +182,10 @@ export default function ClientView() {
               const hasBonus = isGift && bonuses > 0;
               return (
                 <div key={i} className="flex flex-col items-center gap-1.5">
-                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 ${
-                    (isActive || hasBonus) ? "bg-[#2a1d15] border-white/40 shadow-inner" : "bg-white/5 border-white/5"
-                  }`}>
-                    {isGift ? (
-                      <span className={`text-xl sm:text-2xl ${hasBonus ? "animate-bounce" : "opacity-10 grayscale"}`}>🎁</span>
-                    ) : (
-                      <span className={`text-xl sm:text-2xl transition-transform duration-300 ${isActive ? "scale-110" : "opacity-10 grayscale scale-90"}`}>☕️</span>
-                    )}
+                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 ${ (isActive || hasBonus) ? "bg-[#2a1d15] border-white/40 shadow-inner" : "bg-white/5 border-white/5" }`}>
+                    {isGift ? <span className={`text-xl sm:text-2xl ${hasBonus ? "animate-bounce" : "opacity-10 grayscale"}`}>🎁</span> : <span className={`text-xl sm:text-2xl transition-transform duration-300 ${isActive ? "scale-110" : "opacity-10 grayscale scale-90"}`}>☕️</span>}
                   </div>
-                  {!isGift && (
-                    <span className={`text-[8px] sm:text-[9px] font-black italic uppercase tracking-widest ${isActive ? "text-white" : "text-white/20"}`}>
-                      {i + 1}
-                    </span>
-                  )}
+                  {!isGift && <span className={`text-[8px] sm:text-[9px] font-black italic uppercase tracking-widest ${isActive ? "text-white" : "text-white/20"}`}>{i + 1}</span>}
                 </div>
               );
             })}
@@ -187,59 +198,45 @@ export default function ClientView() {
             </div>
           )}
 
-          <div className="bg-[#2a1d15] px-6 py-2 rounded-full border border-white/5 text-[9px] font-bold text-[#d2b48c] uppercase tracking-widest shadow-sm">
-            Всього випито: {user.total_cups}
+          {/* Блок з побажанням дня */}
+          <div className="w-full bg-[#2a1d15]/30  p-3 rounded-[2.5rem] border border-white/10 shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-1000">
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] uppercase font-black text-[#d2b48c] opacity-60 tracking-[0.3em] mb-3">Твоє натхнення сьогодні</span>
+              <p className="text-lg sm:text-base font-regular italic leading-tight text-[#FCFBFB]/90">« {dailyWish} »</p>
+            </div>
           </div>
 
           <button onClick={() => {localStorage.clear(); window.location.reload();}} className="mt-12 opacity-20 text-[9px] uppercase font-black tracking-[0.3em] hover:opacity-100 transition-opacity">Вийти з акаунту</button>
         </div>
       ) : (
-        /* --- ВХІД / РЕЄСТРАЦІЯ --- */
         <div className="w-full max-w-sm flex flex-col items-center my-auto">
            {step === 'phone' ? (
              <div className="bg-[#2a1d15] p-6 sm:p-10 rounded-[2.5rem] w-full border border-white/5 shadow-2xl animate-in fade-in slide-in-from-bottom-8 duration-700">
                <h2 className="text-xl font-black mb-8 uppercase text-[#d2b48c] italic text-center tracking-tighter">Твій бонусний хаб</h2>
                <div className="space-y-4">
-                 <input placeholder="Твоє ім'я" className="w-full bg-[#1a110a] p-4 rounded-2xl text-white text-center font-bold outline-none border border-white/5 focus:border-[#d2b48c] transition-colors" value={name} onChange={e => setName(e.target.value)} />
-                 <input placeholder="Номер телефону" type="tel" className="w-full bg-[#1a110a] p-4 rounded-2xl text-white text-center font-bold outline-none border border-white/5 focus:border-[#d2b48c] transition-colors" value={phone} onChange={e => setPhone(e.target.value)} />
-                 <button onClick={handleGetCode} disabled={loading} className="w-full bg-[#d2b48c] text-[#1a110a] font-black py-5 rounded-2xl uppercase tracking-[0.15em] active:scale-[0.98] shadow-lg text-xs disabled:opacity-50">
-                   {loading ? "Зачекайте..." : "Отримати код"}
-                 </button>
+                 <input placeholder="Твоє ім'я" className="w-full bg-[#1a110a] p-4 rounded-2xl text-white text-center font-bold outline-none border border-white/5 focus:border-[#d2b48c]" value={name} onChange={e => setName(e.target.value)} />
+                 <input placeholder="Номер телефону" type="tel" className="w-full bg-[#1a110a] p-4 rounded-2xl text-white text-center font-bold outline-none border border-white/5 focus:border-[#d2b48c]" value={phone} onChange={e => setPhone(e.target.value)} />
+                 <button onClick={handleGetCode} disabled={loading} className="w-full bg-[#d2b48c] text-[#1a110a] font-black py-5 rounded-2xl uppercase tracking-[0.15em] active:scale-[0.98] shadow-lg text-xs disabled:opacity-50">{loading ? "Зачекайте..." : "Отримати код"}</button>
                </div>
              </div>
            ) : (
              <div className="bg-[#2a1d15] p-6 sm:p-10 rounded-[2.5rem] w-full border border-white/5 shadow-2xl text-center animate-in zoom-in-95 duration-300">
                <h2 className="text-xl font-black mb-4 uppercase text-[#d2b48c] italic tracking-tight">Підтвердження</h2>
-               <div className="bg-[#d2b48c]/10 border border-[#d2b48c]/20 p-4 rounded-2xl mb-8">
-                 <p className="text-[10px] text-[#d2b48c] uppercase font-black leading-tight tracking-wider">
-                   ☕️ Код у баристи <br/> 
-                   <span className="opacity-60 font-medium">Він уже на планшеті</span>
-                 </p>
-               </div>
+               <div className="bg-[#d2b48c]/10 border border-[#d2b48c]/20 p-4 rounded-2xl mb-8"><p className="text-[10px] text-[#d2b48c] uppercase font-black leading-tight tracking-wider">☕️ Код у баристи <br/> <span className="opacity-60 font-medium">Він уже на планшеті</span></p></div>
                <input placeholder="****" maxLength={4} type="tel" autoFocus value={otp} className="w-full bg-[#1a110a] p-4 rounded-2xl mb-8 text-white text-center text-4xl font-black tracking-[0.4em] outline-none border border-white/5 focus:border-[#d2b48c]" onChange={e => setOtp(e.target.value)} />
-               <button onClick={handleVerify} disabled={loading} className="w-full bg-[#d2b48c] text-[#1a110a] font-black py-5 rounded-2xl uppercase tracking-widest active:scale-95 shadow-lg text-xs disabled:opacity-50">
-                 {loading ? "Перевірка..." : "Увійти"}
-               </button>
+               <button onClick={handleVerify} disabled={loading} className="w-full bg-[#d2b48c] text-[#1a110a] font-black py-5 rounded-2xl uppercase tracking-widest active:scale-95 shadow-lg text-xs disabled:opacity-50">{loading ? "Перевірка..." : "Увійти"}</button>
                <button onClick={() => setStep('phone')} className="mt-8 text-[9px] uppercase opacity-30 font-bold tracking-[0.2em] italic hover:opacity-100 transition-opacity">← Змінити номер</button>
              </div>
            )}
         </div>
       )}
 
-      {/* Модалка тільки для iPhone */}
       {isIOS && (
         <div className="fixed top-6 left-4 right-4 z-[999] max-w-sm mx-auto animate-in slide-in-from-top-full duration-700">
           <div className="bg-white text-[#1a110a] p-6 rounded-[2rem] shadow-2xl border-2 border-[#d2b48c] text-center">
             <p className="text-[11px] font-black uppercase mb-2 tracking-tight">Встановити на iPhone 📱</p>
-            <p className="text-[10px] leading-relaxed opacity-80 mb-5 px-4">
-              Натисни <span className="font-black underline decoration-[#d2b48c] decoration-2">«Поділитися»</span> та обери <span className="font-black underline decoration-[#d2b48c] decoration-2">«Додати на початковий екран»</span>
-            </p>
-            <button 
-              onClick={() => setIsIOS(false)} 
-              className="w-full bg-[#1a110a] text-white py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg active:scale-95 transition-transform" 
-            >
-              Зрозуміло
-            </button>
+            <p className="text-[10px] leading-relaxed opacity-80 mb-5 px-4">Натисни <span className="font-black underline decoration-[#d2b48c] decoration-2">«Поділитися»</span> та обери <span className="font-black underline decoration-[#d2b48c] decoration-2">«Додати на початковий екран»</span></p>
+            <button onClick={() => setIsIOS(false)} className="w-full bg-[#1a110a] text-white py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg active:scale-95 transition-transform">Зрозуміло</button>
           </div>
         </div>
       )}
