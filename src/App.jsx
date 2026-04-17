@@ -15,8 +15,8 @@ export default function App() {
       loader.classList.add('fade-out');
       setTimeout(() => loader.remove(), 500); // Повністю видаляємо через пів секунди
     }
-    
-    const currentVersion = 'forceRefreshV2'; 
+
+    const currentVersion = 'forceRefreshV3'; 
     const hasRefreshed = sessionStorage.getItem(currentVersion);
     
     if (!hasRefreshed) {

@@ -12,8 +12,31 @@
     <title>Wake Up Coffee</title>
   </head>
   <body>
-    
+    <style>
+      /* Стилі, щоб лого було по центру, поки React не завантажився */
+      #preloader {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #1a110a; /* Твій колір фону */
+        z-index: 9999;
+      }
+      .fade-out {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        pointer-events: none;
+      }
+    </style>
+
+    <div id="preloader">
+      <img src="/logo.svg" alt="Logo" style="width: 150px; height: auto;">
+    </div>
+
     <div id="root"></div>
+    
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

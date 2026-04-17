@@ -30,7 +30,7 @@ export default function ClientView() {
 
   // 2. Завантаження побажань (GitHub + LocalStorage)
   useEffect(() => {
-    const RAW_URL = "https://raw.githubusercontent.com/ТВОЙ_ЛОГИН/ТВОЙ_РЕПО/main/wishes.json";
+    const RAW_URL = "https://raw.githubusercontent.com/Tim4Lu/coffee-loyalty/main/public/wishes.json";
 
     const pickWish = (list) => {
       if (!list || list.length === 0) return;
@@ -151,12 +151,27 @@ export default function ClientView() {
 
   if (step === 'loading') {
     return <div className="min-h-screen bg-[#1a110a] flex items-center justify-center ">
-      <img src="/Logo.svg" alt="Logo" className="w-[150px] h-auto" />
+      <img src="/logo.svg" alt="Logo" className="w-[150px] h-auto" />
       </div>;
   }
 
   const bonuses = user ? Math.floor(user.progress / 7) : 0;
   const progressInCycle = user ? user.progress % 7 : 0;
+
+  const renderWish = (text) => {
+  // Регулярний вираз, який знаходить емодзі
+  const emojiRegex = /(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/gu;
+  
+  const parts = text.split(emojiRegex);
+    return parts.map((part, i) => 
+      emojiRegex.test(part) ? (
+        // Для емодзі ставимо not-italic і inline-block, щоб вони стояли рівно
+        <span key={i} className="not-italic inline-block ml-1">{part}</span>
+      ) : (
+        part
+      )
+    );
+  };
 
   return (
     <div className="min-h-screen bg-transparent text-white p-4 flex flex-col items-center justify-center font-sans overflow-x-hidden">
@@ -204,7 +219,7 @@ export default function ClientView() {
           <div className="w-full bg-[#2a1d15]/30  p-3 rounded-[2.5rem] border border-white/10 shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-1000">
             <div className="flex flex-col items-center">
               <span className="text-[10px] uppercase font-black text-[#d2b48c] opacity-60 tracking-[0.3em] mb-3">Твоє натхнення сьогодні</span>
-              <p className="text-lg sm:text-base font-regular italic leading-tight text-[#FCFBFB]/90">« {dailyWish} »</p>
+              <p className="text-lg sm:text-base font-regular italic leading-tight text-[#FCFBFB]/90">« {renderWish(dailyWish)} »</p>
             </div>
           </div>
 
