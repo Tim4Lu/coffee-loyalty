@@ -1,0 +1,16 @@
+{
+  "name": "Wake Up Coffee Loyalty",
+  "short_name": "Wake Up",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a110a",
+  "theme_color": "#1a110a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

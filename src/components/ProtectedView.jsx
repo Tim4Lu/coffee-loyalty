@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const PASSWORDS = { 
   admin: "1111", 
-  barista: "2222" 
+  barista: "0000" 
 };
 
 function ProtectedView({ children, type }) {
